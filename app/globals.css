@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #faf8ff;
+  --bg-card: #ffffff;
+  --bg-hover: #f5f2ff;
+
+  --lavender: #c4b5e8;
+  --lavender-soft: #ede9fb;
+  --lavender-deep: #9b85d4;
+  --pink: #f0a8c8;
+  --pink-soft: #fde8f2;
+  --mint: #9dd4c4;
+  --mint-soft: #e0f5ef;
+  --peach: #f9c5a0;
+  --peach-soft: #fdeee4;
+  --sky: #a0c9f9;
+  --sky-soft: #e4f1fd;
+  --yellow: #f9dfa0;
+  --yellow-soft: #fdf5dc;
+
+  --text-heading: #6b4fa0;
+  --text-body: #4a3d6b;
+  --text-muted: #9488b0;
+
+  --border: #ebe5f5;
+  --shadow: rgba(160, 130, 210, 0.12);
+
+  --radius: 1.1rem;
+}
+
+.dark {
+  --bg-base: #1a1625;
+  --bg-card: #221d30;
+  --bg-hover: #2a2340;
+
+  --lavender: #a090d4;
+  --lavender-soft: #2d2648;
+  --lavender-deep: #c4b5e8;
+  --pink: #e87db0;
+  --pink-soft: #3d2235;
+  --mint: #72b89e;
+  --mint-soft: #1a2f2a;
+  --peach: #e8a07a;
+  --peach-soft: #38251a;
+  --sky: #7ab0e8;
+  --sky-soft: #1a2a3d;
+  --yellow: #e8c87a;
+  --yellow-soft: #332a14;
+
+  --text-heading: #d4b8f0;
+  --text-body: #c0aedd;
+  --text-muted: #7a6a9a;
+
+  --border: #332a48;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-body);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--lavender); border-radius: 4px; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.75); }
+}
+
+.fade-in  { animation: fadeInUp 0.35s ease-out forwards; }
+.float    { animation: float 3.5s ease-in-out infinite; }
+.twinkle  { animation: twinkle 2.5s ease-in-out infinite; }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 16px var(--shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 6px 28px var(--shadow);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--lavender), var(--pink));
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 0.55rem 1.3rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 12px rgba(180, 140, 220, 0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(180, 140, 220, 0.45);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-ghost:hover {
+  border-color: var(--lavender);
+  color: var(--text-heading);
+}
+
+.input-field {
+  background: var(--bg-base);
+  border: 1.5px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.9rem;
+  color: var(--text-body);
+  width: 100%;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input-field:focus {
+  border-color: var(--lavender);
+  box-shadow: 0 0 0 3px rgba(196, 181, 232, 0.18);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 15, 35, 0.55);
+  backdrop-filter: blur(5px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.4);
+  max-width: 520px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 0.25s ease-out;
+}
