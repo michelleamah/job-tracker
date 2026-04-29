@@ -117,7 +117,8 @@ export default function ApplicationTable({ apps, onView }: ApplicationTableProps
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search company or role…"
-            className="input-field pl-8"
+            className="input-field"
+            style={{ paddingLeft: "2rem" }}
           />
         </div>
 
