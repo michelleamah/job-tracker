@@ -9,7 +9,7 @@ import {
   CATEGORY_CONFIG,
   TIER_CONFIG,
 } from "@/lib/types";
-import { formatDate, formatDateShort } from "@/lib/utils";
+import { formatDate, formatDateShort, isOverdue } from "@/lib/utils";
 import { addInterviewNote } from "@/lib/store";
 import { format } from "date-fns";
 
@@ -180,9 +180,9 @@ export default function ApplicationDetail({
                 <span className="text-sm" style={{ color: "var(--text-body)" }}>
                   {app.nextAction}
                   {app.nextActionDue && (
-                    <span className="ml-2 overdue-badge" style={{ display: "inline-flex" }}>
-                      Due {formatDateShort(app.nextActionDue)}
-                    </span>
+                    isOverdue(app.nextActionDue)
+                      ? <span className="ml-2 overdue-badge" style={{ display: "inline-flex" }}>Due {formatDateShort(app.nextActionDue)}</span>
+                      : <span className="ml-2 text-xs" style={{ color: "var(--text-muted)" }}>Due {formatDateShort(app.nextActionDue)}</span>
                   )}
                 </span>
               </div>
