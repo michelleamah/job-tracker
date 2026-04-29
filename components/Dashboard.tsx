@@ -11,7 +11,7 @@ import {
   getStaleApps,
   formatDateShort,
 } from "@/lib/utils";
-import { AlertCircle, Clock, TrendingUp } from "lucide-react";
+import { AlertCircle, Clock, TrendingUp, Briefcase, Zap, Target, BarChart2, Star } from "lucide-react";
 
 interface DashboardProps {
   apps: Application[];
@@ -58,12 +58,12 @@ export default function Dashboard({ apps, onViewApp }: DashboardProps) {
   return (
     <div className="space-y-6 fade-in">
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard emoji="📋" label="Total Apps" value={totalApps} color="var(--lavender-deep)" />
-        <StatCard emoji="⚡" label="Active" value={activeCount} color="var(--sky)" />
-        <StatCard emoji="🎯" label="Interviews" value={interviewCount} color="var(--peach)" />
-        <StatCard emoji="📈" label="Response Rate" value={`${responseRate}%`} color="var(--mint)" />
-        <StatCard emoji="🎉" label="Offers" value={offerCount} color="var(--green)" />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatCard icon={<Briefcase size={20} style={{ color: "var(--lavender-deep)" }} />} iconBg="var(--lavender-soft)" label="Total Apps" value={totalApps} valueColor="var(--lavender-deep)" />
+        <StatCard icon={<Zap size={20} style={{ color: "var(--sky)" }} />} iconBg="var(--sky-soft)" label="Active" value={activeCount} valueColor="var(--sky)" />
+        <StatCard icon={<Target size={20} style={{ color: "var(--peach)" }} />} iconBg="var(--peach-soft)" label="Interviews" value={interviewCount} valueColor="var(--peach)" />
+        <StatCard icon={<BarChart2 size={20} style={{ color: "var(--mint)" }} />} iconBg="var(--mint-soft)" label="Response Rate" value={`${responseRate}%`} valueColor="var(--mint)" />
+        <StatCard icon={<Star size={20} style={{ color: "var(--green)" }} />} iconBg="var(--green-soft)" label="Offers" value={offerCount} valueColor="var(--green)" />
       </div>
 
       {/* Overdue Next Actions */}
@@ -145,7 +145,7 @@ export default function Dashboard({ apps, onViewApp }: DashboardProps) {
 
       <div className="grid md:grid-cols-2 gap-5">
         {/* Pipeline Bar */}
-        <div className="card-static p-5">
+        <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={15} style={{ color: "var(--lavender-deep)" }} />
             <h3 className="font-bold text-sm" style={{ color: "var(--text-heading)" }}>Pipeline</h3>
@@ -177,7 +177,7 @@ export default function Dashboard({ apps, onViewApp }: DashboardProps) {
 
         <div className="space-y-5">
           {/* Category Breakdown */}
-          <div className="card-static p-5">
+          <div className="card p-5">
             <h3 className="font-bold text-sm mb-3" style={{ color: "var(--text-heading)" }}>
               📂 By Role Category
             </h3>
@@ -199,7 +199,7 @@ export default function Dashboard({ apps, onViewApp }: DashboardProps) {
           </div>
 
           {/* Priority Breakdown */}
-          <div className="card-static p-5">
+          <div className="card p-5">
             <h3 className="font-bold text-sm mb-3" style={{ color: "var(--text-heading)" }}>
               🎯 By Priority
             </h3>
@@ -227,24 +227,26 @@ export default function Dashboard({ apps, onViewApp }: DashboardProps) {
 }
 
 function StatCard({
-  emoji,
+  icon,
+  iconBg,
   label,
   value,
-  color,
+  valueColor,
 }: {
-  emoji: string;
+  icon: React.ReactNode;
+  iconBg: string;
   label: string;
   value: number | string;
-  color: string;
+  valueColor: string;
 }) {
   return (
-    <div className="card-static p-4 text-center">
-      <div className="text-2xl mb-1">{emoji}</div>
-      <div className="text-2xl font-bold mb-0.5" style={{ color }}>
-        {value}
+    <div className="card p-4 flex items-center gap-3">
+      <div className="rounded-2xl p-2.5 flex-shrink-0" style={{ background: iconBg }}>
+        {icon}
       </div>
-      <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-        {label}
+      <div className="min-w-0">
+        <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{label}</p>
+        <p className="text-2xl font-bold leading-tight" style={{ color: valueColor }}>{value}</p>
       </div>
     </div>
   );

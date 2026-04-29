@@ -112,54 +112,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-base)" }}>
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} onAdd={openAdd} />
 
       <main className="max-w-6xl mx-auto px-4 py-7">
-        {/* Page title */}
-        <div className="mb-6">
-          <h2
-            className="text-2xl font-bold mb-1"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--lavender-deep), var(--pink), var(--sky))",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            {activeTab === "dashboard" && "Dashboard ✨"}
-            {activeTab === "applications" && "Applications 📋"}
-            {activeTab === "networking" && "Networking 🤝"}
-            {activeTab === "weekly" && "Weekly Log 📅"}
-          </h2>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            {activeTab === "dashboard" &&
-              "Your job search at a glance 🌸"}
-            {activeTab === "applications" &&
-              `${apps.length} application${apps.length !== 1 ? "s" : ""} tracked`}
-            {activeTab === "networking" &&
-              "Manage your professional relationships 💫"}
-            {activeTab === "weekly" &&
-              "Track your weekly job search activity 📊"}
-          </p>
-        </div>
-
         {/* Tab content */}
         {activeTab === "dashboard" && (
-          <Dashboard
-            apps={apps}
-            onViewApp={(app) => {
-              openView(app);
-              // Don't switch tab — show the detail modal from here
-            }}
-          />
+          <Dashboard apps={apps} onViewApp={openView} />
         )}
 
         {activeTab === "applications" && (
-          <ApplicationTable
-            apps={apps}
-            onAdd={openAdd}
-            onView={openView}
-          />
+          <ApplicationTable apps={apps} onView={openView} />
         )}
 
         {activeTab === "networking" && (
