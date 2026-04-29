@@ -1,62 +1,85 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { LayoutGrid, List, Search, SlidersHorizontal } from "lucide-react";
-import Header from "@/components/Header";
-import StatsBar from "@/components/StatsBar";
-import KanbanBoard from "@/components/KanbanBoard";
-import ListView from "@/components/ListView";
+import Header, { TabId } from "@/components/Header";
+import Dashboard from "@/components/Dashboard";
+import ApplicationTable from "@/components/ApplicationTable";
+import ApplicationDetail from "@/components/ApplicationDetail";
 import ApplicationForm from "@/components/ApplicationForm";
-import { Application, AppStatus, AppType, Priority, STATUS_CONFIG } from "@/lib/types";
-import { loadApplications, addApplication, updateApplication, deleteApplication } from "@/lib/store";
-import { sortApplications } from "@/lib/utils";
+import NetworkingTab from "@/components/NetworkingTab";
+import WeeklyLog from "@/components/WeeklyLog";
+import { Application } from "@/lib/types";
+import {
+  loadApplications,
+  addApplication,
+  updateApplication,
+  deleteApplication,
+} from "@/lib/store";
 
-type View = "kanban" | "list";
-type SortKey = "date" | "company" | "status" | "priority";
+type FormData = Omit<
+  Application,
+  "id" | "createdAt" | "lastUpdated" | "interviewNotes" | "statusHistory"
+>;
 
 export default function Home() {
   const [apps, setApps] = useState<Application[]>([]);
   const [mounted, setMounted] = useState(false);
-  const [view, setView] = useState<View>("list");
-  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+
+  // Application modals
+  const [viewTarget, setViewTarget] = useState<Application | null>(null);
   const [editTarget, setEditTarget] = useState<Application | null>(null);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<AppStatus | "all">("all");
-  const [filterType, setFilterType] = useState<AppType | "all">("all");
-  const [filterPriority, setFilterPriority] = useState<Priority | "all">("all");
-  const [sort, setSort] = useState<SortKey>("date");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     setApps(loadApplications());
     setMounted(true);
   }, []);
 
-  const handleAdd = useCallback((data: Omit<Application, "id" | "createdAt" | "lastUpdated">) => {
-    const newApp = addApplication(data);
+  // ── Application handlers ────────────────────────────────────────────────────
+
+  const handleAdd = useCallback((data: FormData) => {
+    const newApp = addApplication({
+      ...data,
+      interviewNotes: [],
+      statusHistory: [{ status: data.status, date: new Date().toISOString().slice(0, 10) }],
+    });
     setApps((prev) => [newApp, ...prev]);
     setShowForm(false);
   }, []);
 
-  const handleEdit = useCallback((data: Omit<Application, "id" | "createdAt" | "lastUpdated">) => {
-    if (!editTarget) return;
-    const updated = updateApplication(editTarget.id, data);
-    setApps((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
-    setEditTarget(null);
-  }, [editTarget]);
+  const handleEdit = useCallback(
+    (data: FormData) => {
+      if (!editTarget) return;
+      const updated = updateApplication(editTarget.id, data);
+      setApps((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+      setEditTarget(null);
+      setShowForm(false);
+      // If we came from a detail view, update it
+      setViewTarget((prev) => (prev?.id === updated.id ? updated : prev));
+    },
+    [editTarget]
+  );
 
   const handleDelete = useCallback((id: string) => {
     deleteApplication(id);
     setApps((prev) => prev.filter((a) => a.id !== id));
+    setViewTarget(null);
   }, []);
 
-  const handleStatusChange = useCallback((id: string, status: AppStatus) => {
-    const updated = updateApplication(id, { status });
+  const handleUpdate = useCallback((updated: Application) => {
     setApps((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setViewTarget(updated);
+  }, []);
+
+  const openAdd = useCallback(() => {
+    setEditTarget(null);
+    setShowForm(true);
   }, []);
 
   const openEdit = useCallback((app: Application) => {
     setEditTarget(app);
+    setViewTarget(null);
     setShowForm(true);
   }, []);
 
@@ -65,24 +88,23 @@ export default function Home() {
     setEditTarget(null);
   }, []);
 
-  const filtered = sortApplications(
-    apps.filter((a) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q || a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q) || a.location.toLowerCase().includes(q);
-      const matchStatus = filterStatus === "all" || a.status === filterStatus;
-      const matchType = filterType === "all" || a.type === filterType;
-      const matchPriority = filterPriority === "all" || a.priority === filterPriority;
-      return matchSearch && matchStatus && matchType && matchPriority;
-    }),
-    sort
-  );
+  const openView = useCallback((app: Application) => {
+    setViewTarget(app);
+  }, []);
+
+  // ── Loading state ─────────────────────────────────────────────────────────
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--bg-base)" }}
+      >
         <div className="text-center">
           <p className="text-5xl float mb-3">🚀</p>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Loading your applications…</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Loading Launchpad…
+          </p>
         </div>
       </div>
     );
@@ -90,156 +112,64 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-base)" }}>
-      <Header onAdd={() => { setEditTarget(null); setShowForm(true); }} />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="max-w-5xl mx-auto px-4 py-7">
-        {/* Welcome */}
+      <main className="max-w-6xl mx-auto px-4 py-7">
+        {/* Page title */}
         <div className="mb-6">
           <h2
             className="text-2xl font-bold mb-1"
             style={{
-              background: "linear-gradient(135deg, var(--lavender-deep), var(--pink), var(--sky))",
+              background:
+                "linear-gradient(135deg, var(--lavender-deep), var(--pink), var(--sky))",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
-            Your Job Search HQ ✨
+            {activeTab === "dashboard" && "Dashboard ✨"}
+            {activeTab === "applications" && "Applications 📋"}
+            {activeTab === "networking" && "Networking 🤝"}
+            {activeTab === "weekly" && "Weekly Log 📅"}
           </h2>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Summer 2027 internships · SF Bay Area · Solutions Engineer &amp; Sales Engineer roles 🌸
+            {activeTab === "dashboard" &&
+              "Your job search at a glance 🌸"}
+            {activeTab === "applications" &&
+              `${apps.length} application${apps.length !== 1 ? "s" : ""} tracked`}
+            {activeTab === "networking" &&
+              "Manage your professional relationships 💫"}
+            {activeTab === "weekly" &&
+              "Track your weekly job search activity 📊"}
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="mb-6">
-          <StatsBar apps={apps} />
-        </div>
-
-        {/* Toolbar */}
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          {/* Search */}
-          <div className="relative flex-1 min-w-48">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search company, role, location…"
-              className="input-field pl-8"
-            />
-          </div>
-
-          {/* Filter toggle */}
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className="btn-ghost flex items-center gap-1.5"
-            style={showFilters ? { borderColor: "var(--lavender)", color: "var(--text-heading)" } : {}}
-          >
-            <SlidersHorizontal size={14} />
-            Filters
-          </button>
-
-          {/* Sort */}
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="input-field"
-            style={{ width: "auto" }}
-          >
-            <option value="date">Sort: Recent</option>
-            <option value="company">Sort: Company</option>
-            <option value="status">Sort: Status</option>
-            <option value="priority">Sort: Priority</option>
-          </select>
-
-          {/* View toggle */}
-          <div
-            className="flex rounded-xl p-0.5 gap-0.5"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
-          >
-            {([["list", <List key="l" size={15} />], ["kanban", <LayoutGrid key="k" size={15} />]] as [View, React.ReactNode][]).map(([v, icon]) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className="p-1.5 rounded-lg transition-all"
-                style={
-                  view === v
-                    ? { background: "var(--lavender-soft)", color: "var(--lavender-deep)" }
-                    : { color: "var(--text-muted)" }
-                }
-              >
-                {icon}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Filter chips */}
-        {showFilters && (
-          <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-xl fade-in" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
-            {/* Status filter */}
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setFilterStatus("all")}
-                className="text-xs px-3 py-1 rounded-full font-semibold transition-all"
-                style={filterStatus === "all" ? { background: "var(--lavender)", color: "white" } : { background: "var(--bg-base)", color: "var(--text-muted)" }}
-              >
-                All statuses
-              </button>
-              {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-                <button
-                  key={k}
-                  onClick={() => setFilterStatus(k as AppStatus)}
-                  className="text-xs px-3 py-1 rounded-full font-semibold transition-all"
-                  style={filterStatus === k ? { background: v.color, color: "white" } : { background: v.bg, color: v.color }}
-                >
-                  {v.emoji} {v.label}
-                </button>
-              ))}
-            </div>
-            <div className="w-full h-px" style={{ background: "var(--border)" }} />
-            {/* Type + Priority */}
-            <div className="flex gap-1.5 flex-wrap">
-              {(["all", "internship", "fulltime"] as (AppType | "all")[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setFilterType(t)}
-                  className="text-xs px-3 py-1 rounded-full font-semibold transition-all"
-                  style={filterType === t ? { background: "var(--sky)", color: "white" } : { background: "var(--sky-soft)", color: "var(--sky)" }}
-                >
-                  {t === "all" ? "All types" : t === "internship" ? "🌱 Internship" : "💼 Full-time"}
-                </button>
-              ))}
-              <span style={{ color: "var(--border)" }}>·</span>
-              {(["all", "high", "medium", "low"] as (Priority | "all")[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setFilterPriority(p)}
-                  className="text-xs px-3 py-1 rounded-full font-semibold transition-all"
-                  style={filterPriority === p ? { background: "var(--lavender)", color: "white" } : { background: "var(--lavender-soft)", color: "var(--lavender-deep)" }}
-                >
-                  {p === "all" ? "All priorities" : p === "high" ? "🔥 High" : p === "medium" ? "⚡ Medium" : "🌿 Low"}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Tab content */}
+        {activeTab === "dashboard" && (
+          <Dashboard
+            apps={apps}
+            onViewApp={(app) => {
+              openView(app);
+              // Don't switch tab — show the detail modal from here
+            }}
+          />
         )}
 
-        {/* Results count */}
-        <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-          {filtered.length} application{filtered.length !== 1 ? "s" : ""}
-          {search || filterStatus !== "all" || filterType !== "all" || filterPriority !== "all" ? " (filtered)" : ""}
-        </p>
-
-        {/* View */}
-        {view === "list" ? (
-          <ListView apps={filtered} onEdit={openEdit} onDelete={handleDelete} />
-        ) : (
-          <KanbanBoard apps={filtered} onEdit={openEdit} onDelete={handleDelete} onStatusChange={handleStatusChange} />
+        {activeTab === "applications" && (
+          <ApplicationTable
+            apps={apps}
+            onAdd={openAdd}
+            onView={openView}
+          />
         )}
 
-        {/* Footer quote */}
-        <div className="text-center mt-10 py-4">
+        {activeTab === "networking" && (
+          <NetworkingTab apps={apps} />
+        )}
+
+        {activeTab === "weekly" && <WeeklyLog />}
+
+        {/* Footer */}
+        <div className="text-center mt-12 py-4">
           <p className="text-xs italic" style={{ color: "var(--text-muted)" }}>
             &ldquo;Every application is one step closer to your dream role. Keep going! 🌸&rdquo;
           </p>
@@ -247,6 +177,18 @@ export default function Home() {
         </div>
       </main>
 
+      {/* Application Detail modal */}
+      {viewTarget && (
+        <ApplicationDetail
+          app={viewTarget}
+          onClose={() => setViewTarget(null)}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onUpdate={handleUpdate}
+        />
+      )}
+
+      {/* Application Form modal */}
       {showForm && (
         <ApplicationForm
           initial={editTarget}
